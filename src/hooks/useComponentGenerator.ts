@@ -5,7 +5,7 @@ interface UseComponentGeneratorReturn {
   components: GeneratedComponent[];
   isLoading: boolean;
   error: string | null;
-  generate: (prompt: string, apiKey: string, provider: Provider) => Promise<void>;
+  generate: (prompt: string, apiKey: string | undefined, provider: Provider) => Promise<void>;
   removeComponent: (id: string) => void;
   clearAll: () => void;
 }
@@ -15,7 +15,7 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async (prompt: string, apiKey: string, provider: Provider) => {
+  const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider) => {
     setIsLoading(true);
     setError(null);
 
@@ -23,7 +23,7 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, apiKey, provider }),
+        body: JSON.stringify({ prompt, ...(apiKey && { apiKey }), provider }),
       });
 
       const data = await res.json();

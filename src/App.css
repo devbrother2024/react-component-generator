@@ -49,6 +49,15 @@
   cursor: pointer;
 }
 
+.env-badge {
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.4rem;
+  background: #065f46;
+  color: #6ee7b7;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
 .api-key-input label {
   display: block;
   font-size: 0.8rem;
@@ -305,6 +314,47 @@
   color: #e2e8f0;
   font-size: 0.9rem;
   font-style: italic;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-refresh {
+  padding: 0.3rem 0.5rem;
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.btn-refresh:hover {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.btn-regenerate {
+  padding: 0.3rem 0.7rem;
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.btn-regenerate:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.btn-regenerate:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-remove {

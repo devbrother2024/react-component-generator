@@ -11,6 +11,7 @@ Rules:
 - Use descriptive variable names and clean formatting
 - For colors, prefer modern palettes (gradients, shadows, etc.)
 - Ensure the component is interactive where appropriate (hover states, click handlers, etc.)
+- Do NOT use TypeScript syntax — no type annotations, no interfaces, no generics, no "as" casts. Write plain JavaScript only.
 
 Example output format:
 const GradientButton = () => {
@@ -43,11 +44,20 @@ render(<GradientButton />);`;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
 type Provider = 'anthropic' | 'google';
+
+const ENV_KEYS: Record<Provider, string | undefined> = {
+  anthropic: process.env.ANTHROPIC_API_KEY,
+  google: process.env.GOOGLE_API_KEY,
+};
+
+function resolveApiKey(provider: Provider, clientKey?: string): string | null {
+  return clientKey || ENV_KEYS[provider] || null;
+}
 
 async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -89,7 +99,7 @@ async function callGoogle(prompt: string, apiKey: string): Promise<string> {
     body: JSON.stringify({
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 4096 },
+      generationConfig: { maxOutputTokens: 8192 },
     }),
   });
 
@@ -100,11 +110,17 @@ async function callGoogle(prompt: string, apiKey: string): Promise<string> {
   const data = (await response.json()) as {
     candidates: Array<{
       content: { parts: Array<{ text?: string }> };
+      finishReason?: string;
     }>;
   };
 
+  const candidate = data.candidates?.[0];
+  if (candidate?.finishReason === 'MAX_TOKENS') {
+    throw new Error('생성된 코드가 너무 길어 잘렸습니다. 더 간단한 컴포넌트를 요청해주세요.');
+  }
+
   return (
-    data.candidates?.[0]?.content?.parts
+    candidate?.content?.parts
       ?.map((part) => part.text)
       ?.join('') ?? ''
   );
@@ -117,6 +133,16 @@ function stripCodeFences(text: string): string {
     .trim();
 }
 
+function ensureRenderCall(code: string): string {
+  if (/\brender\s*\(/.test(code)) return code;
+
+  const match = code.match(/(?:const|function)\s+([A-Z]\w+)/);
+  if (match) {
+    return `${code}\n\nrender(<${match[1]} />);`;
+  }
+  return code;
+}
+
 const server = Bun.serve({
   port: 3002,
   async fetch(req) {
@@ -126,17 +152,31 @@ const server = Bun.serve({
 
     const url = new URL(req.url);
 
+    if (req.method === 'GET' && url.pathname === '/api/config') {
+      return Response.json(
+        {
+          envKeys: {
+            anthropic: !!ENV_KEYS.anthropic,
+            google: !!ENV_KEYS.google,
+          },
+        },
+        { headers: CORS_HEADERS }
+      );
+    }
+
     if (req.method === 'POST' && url.pathname === '/api/generate') {
       try {
         const { prompt, apiKey, provider = 'anthropic' } = (await req.json()) as {
           prompt: string;
-          apiKey: string;
+          apiKey?: string;
           provider?: Provider;
         };
 
-        if (!apiKey) {
+        const resolvedKey = resolveApiKey(provider, apiKey);
+
+        if (!resolvedKey) {
           return Response.json(
-            { error: 'API key is required' },
+            { error: `API key is required. Set ${provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'GOOGLE_API_KEY'} in .env or enter it manually.` },
             { status: 400, headers: CORS_HEADERS }
           );
         }
@@ -150,14 +190,29 @@ const server = Bun.serve({
 
         const text =
           provider === 'google'
-            ? await callGoogle(prompt, apiKey)
-            : await callAnthropic(prompt, apiKey);
+            ? await callGoogle(prompt, resolvedKey)
+            : await callAnthropic(prompt, resolvedKey);
 
-        const code = stripCodeFences(text);
+        const code = ensureRenderCall(stripCodeFences(text));
 
         return Response.json({ code }, { headers: CORS_HEADERS });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
+
+        if (message.includes('503')) {
+          return Response.json(
+            { error: 'API 서버가 일시적으로 과부하 상태입니다. 잠시 후 다시 시도해주세요.' },
+            { status: 503, headers: CORS_HEADERS }
+          );
+        }
+
+        if (message.includes('429')) {
+          return Response.json(
+            { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+            { status: 429, headers: CORS_HEADERS }
+          );
+        }
+
         return Response.json(
           { error: message },
           { status: 500, headers: CORS_HEADERS }

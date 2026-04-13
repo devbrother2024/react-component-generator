@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { ComponentCard } from './components/ComponentCard';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
@@ -13,16 +13,29 @@ const PROVIDER_CONFIG = {
 function App() {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState<Provider>('anthropic');
+  const [provider, setProvider] = useState<Provider>('google');
+  const [envKeys, setEnvKeys] = useState<Record<Provider, boolean>>({
+    anthropic: false,
+    google: false,
+  });
   const { components, isLoading, error, generate, removeComponent, clearAll } =
     useComponentGenerator();
 
+  useEffect(() => {
+    fetch('/api/config')
+      .then((res) => res.json())
+      .then((data) => setEnvKeys(data.envKeys))
+      .catch(() => {});
+  }, []);
+
+  const hasEnvKey = envKeys[provider];
+
   const handleGenerate = (prompt: string) => {
-    if (!apiKey.trim()) {
-      alert(`${PROVIDER_CONFIG[provider].label} API 키를 먼저 입력해주세요.`);
+    if (!apiKey.trim() && !hasEnvKey) {
+      alert(`${PROVIDER_CONFIG[provider].label} API 키를 입력하거나 .env에 설정해주세요.`);
       return;
     }
-    generate(prompt, apiKey, provider);
+    generate(prompt, apiKey || undefined, provider);
   };
 
   const handleProviderChange = (newProvider: Provider) => {
@@ -53,14 +66,20 @@ function App() {
             </select>
           </div>
           <div className="api-key-input">
-            <label htmlFor="api-key">API Key</label>
+            <label htmlFor="api-key">
+              API Key{hasEnvKey && <span className="env-badge">.env 설정됨</span>}
+            </label>
             <div className="api-key-field">
               <input
                 id="api-key"
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder={PROVIDER_CONFIG[provider].placeholder}
+                placeholder={
+                  hasEnvKey
+                    ? '서버 키 사용 중 (직접 입력으로 덮어쓰기 가능)'
+                    : PROVIDER_CONFIG[provider].placeholder
+                }
               />
               <button
                 className="btn-toggle-key"
@@ -113,6 +132,8 @@ function App() {
               key={component.id}
               component={component}
               onRemove={removeComponent}
+              onRegenerate={handleGenerate}
+              isLoading={isLoading}
             />
           ))}
         </div>
