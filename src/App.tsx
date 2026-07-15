@@ -48,7 +48,11 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="brand-mark">RC</div>
+        <svg className="logo-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="1" y="1" width="38" height="38" rx="4" />
+          <path d="M8 27 L15 13 L22 27 M11 21 H19" />
+          <circle cx="29" cy="20" r="3.4" className="logo-mark-signal" />
+        </svg>
         <div className="header-copy">
           <span className="eyebrow">React Component Generator</span>
           <h1>프롬프트로 만드는 UI 워크벤치</h1>
@@ -61,7 +65,7 @@ function App() {
           </div>
           <div>
             <span>Components</span>
-            <strong>{components.length}</strong>
+            <strong>{String(components.length).padStart(2, '0')}</strong>
           </div>
         </div>
       </header>
@@ -76,8 +80,10 @@ function App() {
             <span className="panel-kicker">Runtime</span>
             <h2>실행 설정</h2>
           </div>
-          <div className="provider-select">
-            <label htmlFor="provider">Provider</label>
+          <div className="provider-select field-group">
+            <label htmlFor="provider">
+              <span className="field-number">01</span>Provider
+            </label>
             <select
               id="provider"
               value={provider}
@@ -90,9 +96,9 @@ function App() {
               ))}
             </select>
           </div>
-          <div className="api-key-input">
+          <div className="api-key-input field-group">
             <label htmlFor="api-key">
-              API Key
+              <span className="field-number">02</span>API Key
             </label>
             <div className="api-key-field">
               <input
@@ -142,36 +148,32 @@ function App() {
 
         {components.length === 0 && !isLoading && (
           <div className="empty-state">
-            <div className="empty-preview" aria-hidden="true">
-              <div className="empty-window">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="empty-canvas">
-                <div className="empty-card empty-card--primary" />
-                <div className="empty-card" />
-                <div className="empty-card empty-card--wide" />
-              </div>
+            <div className="empty-sheet" aria-hidden="true">
+              <span className="empty-sheet-corner empty-sheet-corner--tl" />
+              <span className="empty-sheet-corner empty-sheet-corner--br" />
+              <span className="empty-sheet-id">RC-000</span>
             </div>
             <div className="empty-copy">
+              <span className="panel-kicker">Awaiting spec</span>
               <h2>새 컴포넌트를 생성해보세요.</h2>
+              <p>프롬프트를 입력하면 첫 스펙 시트가 이 자리에 그려집니다.</p>
             </div>
           </div>
         )}
 
         {isLoading && (
           <div className="loading-card">
-            <div className="loading-pulse" />
+            <div className="scan-line" aria-hidden="true" />
             <p>컴포넌트를 생성하고 있습니다...</p>
           </div>
         )}
 
         <div className="results-grid">
-          {components.map((component) => (
+          {components.map((component, index) => (
             <ComponentCard
               key={component.id}
               component={component}
+              partNumber={components.length - index}
               onRemove={removeComponent}
               onRegenerate={handleGenerate}
               isLoading={isLoading}

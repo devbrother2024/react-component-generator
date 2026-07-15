@@ -5,6 +5,7 @@ import { CodeView } from './CodeView';
 
 interface ComponentCardProps {
   component: GeneratedComponent;
+  partNumber: number;
   onRemove: (id: string) => void;
   onRegenerate: (prompt: string) => void;
   isLoading: boolean;
@@ -12,19 +13,23 @@ interface ComponentCardProps {
 
 type Tab = 'preview' | 'code';
 
-export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: ComponentCardProps) {
+export function ComponentCard({ component, partNumber, onRemove, onRegenerate, isLoading }: ComponentCardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('preview');
   const [previewKey, setPreviewKey] = useState(0);
   const createdAt = component.createdAt.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
   });
+  const partId = `RC-${String(partNumber).padStart(3, '0')}`;
 
   return (
     <div className="component-card">
       <div className="card-header">
         <div className="card-title-group">
-          <span>{createdAt}</span>
+          <span className="part-tag">
+            <span className="part-tag-dot" />
+            {partId} <span className="part-tag-sep">·</span> {createdAt}
+          </span>
           <p className="card-prompt">{component.prompt}</p>
         </div>
         <div className="card-actions">
