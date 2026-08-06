@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { ComponentCard } from './components/ComponentCard';
+import { SearchableSelect } from './components/SearchableSelect';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
 import type { Provider } from './types';
 import './App.css';
@@ -78,17 +79,16 @@ function App() {
           </div>
           <div className="provider-select">
             <label htmlFor="provider">Provider</label>
-            <select
+            <SearchableSelect
               id="provider"
               value={provider}
-              onChange={(e) => handleProviderChange(e.target.value as Provider)}
-            >
-              {Object.entries(PROVIDER_CONFIG).map(([key, { label }]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              onChange={(next) => handleProviderChange(next as Provider)}
+              placeholder="Provider 검색..."
+              options={Object.entries(PROVIDER_CONFIG).map(([key, { label }]) => ({
+                value: key,
+                label,
+              }))}
+            />
           </div>
           <div className="api-key-input">
             <label htmlFor="api-key">
