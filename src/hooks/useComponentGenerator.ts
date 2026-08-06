@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { GeneratedComponent, Provider } from '../types';
 
 interface UseComponentGeneratorReturn {
@@ -10,10 +10,34 @@ interface UseComponentGeneratorReturn {
   clearAll: () => void;
 }
 
+const STORAGE_KEY = 'rcg:components';
+
+function loadStoredComponents(): GeneratedComponent[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.map((item) => ({ ...item, createdAt: new Date(item.createdAt) }));
+  } catch {
+    return [];
+  }
+}
+
 export function useComponentGenerator(): UseComponentGeneratorReturn {
-  const [components, setComponents] = useState<GeneratedComponent[]>([]);
+  const [components, setComponents] = useState<GeneratedComponent[]>(loadStoredComponents);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(components));
+    } catch {
+      // 저장 공간 초과 등으로 영속화에 실패해도 앱 동작에는 영향을 주지 않는다.
+    }
+  }, [components]);
 
   const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider) => {
     setIsLoading(true);
