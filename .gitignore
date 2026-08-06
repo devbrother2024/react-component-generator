@@ -32,6 +32,7 @@ dist-ssr
 
 # playwright-cli 세션 산출물
 .playwright-cli/
+.playwright-mcp/
 
 # oh-my-claudecode 런타임 상태
 .omc/
