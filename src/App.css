@@ -116,8 +116,7 @@
 .composer-panel,
 .settings-panel,
 .component-card,
-.empty-state,
-.loading-card {
+.empty-state {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -587,39 +586,6 @@
 .empty-card--wide {
   grid-column: 1 / -1;
   height: 68px;
-}
-
-.loading-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 20px;
-  margin-bottom: 18px;
-}
-
-.loading-pulse {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--primary);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-.loading-card p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
 }
 
 .results-grid {
