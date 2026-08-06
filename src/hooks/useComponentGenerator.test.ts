@@ -85,6 +85,32 @@ describe('useComponentGenerator - localStorage 영속화', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toHaveLength(0);
   });
 
+  it('로컬스토리지 저장이 실패해도 앱은 죽지 않고 경고를 남긴다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ code: 'render(<Card />)' }),
+      }),
+    );
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useComponentGenerator());
+
+    await act(async () => {
+      await result.current.generate('카드', undefined, 'anthropic');
+    });
+
+    expect(result.current.components).toHaveLength(1);
+    expect(warnSpy).toHaveBeenCalled();
+
+    setItemSpy.mockRestore();
+    warnSpy.mockRestore();
+  });
+
   it('clearAll을 호출하면 로컬스토리지도 비워진다', async () => {
     vi.stubGlobal(
       'fetch',
