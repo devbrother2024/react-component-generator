@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // \"\"' | { read -r f; case \"$f\" in *.ts|*.tsx) echo \"[TDD Reminder] $f 파일을 수정하기 전에 .claude/rules/tdd.md 의 RED-GREEN-REFACTOR 규칙(테스트를 먼저 작성)을 확인하세요.\" >&2 ;; esac; }",
+            "statusMessage": "TDD 규칙 확인 중..."
+          }
+        ]
+      }
+    ]
+  }
+}
