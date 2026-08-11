@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0 <25"
+  },
   "scripts": {
     "dev": "concurrently -n api,vite -c blue,green \"bun run server\" \"vite\"",
     "server": "bun --watch run server/index.ts",

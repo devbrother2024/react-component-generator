@@ -8,13 +8,28 @@ interface ComponentCardProps {
   onRemove: (id: string) => void;
   onRegenerate: (prompt: string) => void;
   isLoading: boolean;
+  isStreaming?: boolean;
 }
 
 type Tab = 'preview' | 'code';
 
-export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: ComponentCardProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('preview');
+export function ComponentCard({
+  component,
+  onRemove,
+  onRegenerate,
+  isLoading,
+  isStreaming = false,
+}: ComponentCardProps) {
+  const [activeTab, setActiveTab] = useState<Tab>(isStreaming ? 'code' : 'preview');
   const [previewKey, setPreviewKey] = useState(0);
+  const [prevIsStreaming, setPrevIsStreaming] = useState(isStreaming);
+
+  if (isStreaming !== prevIsStreaming) {
+    setPrevIsStreaming(isStreaming);
+    if (!isStreaming) {
+      setActiveTab('preview');
+    }
+  }
   const createdAt = component.createdAt.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',

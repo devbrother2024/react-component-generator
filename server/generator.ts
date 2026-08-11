@@ -22,3 +22,14 @@ export function ensureRenderCall(code: string): string {
   }
   return code;
 }
+
+/** 프로바이더 에러 메시지를 사용자에게 보여줄 한국어 안내 문구로 변환한다. */
+export function toFriendlyErrorMessage(message: string): string {
+  if (message.includes('503')) {
+    return 'API 서버가 일시적으로 과부하 상태입니다. 잠시 후 다시 시도해주세요.';
+  }
+  if (message.includes('429')) {
+    return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+  }
+  return message;
+}

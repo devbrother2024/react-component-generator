@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { ComponentCard } from './components/ComponentCard';
+import { SearchableSelect } from './components/SearchableSelect';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
 import type { Provider } from './types';
 import './App.css';
@@ -18,7 +19,7 @@ function App() {
     anthropic: false,
     google: false,
   });
-  const { components, isLoading, error, generate, removeComponent, clearAll } =
+  const { components, streamingComponent, isLoading, error, generate, removeComponent, clearAll } =
     useComponentGenerator();
 
   useEffect(() => {
@@ -78,17 +79,16 @@ function App() {
           </div>
           <div className="provider-select">
             <label htmlFor="provider">Provider</label>
-            <select
+            <SearchableSelect
               id="provider"
               value={provider}
-              onChange={(e) => handleProviderChange(e.target.value as Provider)}
-            >
-              {Object.entries(PROVIDER_CONFIG).map(([key, { label }]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              onChange={(next) => handleProviderChange(next as Provider)}
+              placeholder="Provider 검색..."
+              options={Object.entries(PROVIDER_CONFIG).map(([key, { label }]) => ({
+                value: key,
+                label,
+              }))}
+            />
           </div>
           <div className="api-key-input">
             <label htmlFor="api-key">
@@ -128,7 +128,7 @@ function App() {
       )}
 
       <section className="results-section">
-        {components.length > 0 && (
+        {(components.length > 0 || streamingComponent) && (
           <div className="results-header">
             <div>
               <span className="panel-kicker">Generated</span>
@@ -140,7 +140,7 @@ function App() {
           </div>
         )}
 
-        {components.length === 0 && !isLoading && (
+        {components.length === 0 && !streamingComponent && (
           <div className="empty-state">
             <div className="empty-preview" aria-hidden="true">
               <div className="empty-window">
@@ -160,14 +160,17 @@ function App() {
           </div>
         )}
 
-        {isLoading && (
-          <div className="loading-card">
-            <div className="loading-pulse" />
-            <p>컴포넌트를 생성하고 있습니다...</p>
-          </div>
-        )}
-
         <div className="results-grid">
+          {streamingComponent && (
+            <ComponentCard
+              key={streamingComponent.id}
+              component={streamingComponent}
+              onRemove={removeComponent}
+              onRegenerate={handleGenerate}
+              isLoading={isLoading}
+              isStreaming
+            />
+          )}
           {components.map((component) => (
             <ComponentCard
               key={component.id}
