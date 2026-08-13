@@ -13,6 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "playwright": "^1.62.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-live": "^4.1.8"

@@ -18,7 +18,7 @@ function App() {
     anthropic: false,
     google: false,
   });
-  const { components, isLoading, error, generate, removeComponent, clearAll } =
+  const { components, isLoading, error, generate, removeComponent, clearAll, saveToLocalStorage } =
     useComponentGenerator();
 
   useEffect(() => {
@@ -134,9 +134,14 @@ function App() {
               <span className="panel-kicker">Generated</span>
               <h2>생성된 컴포넌트</h2>
             </div>
-            <button className="btn-clear" onClick={clearAll}>
-              전체 삭제
-            </button>
+            <div className="results-actions">
+              <button className="btn-save" onClick={saveToLocalStorage}>
+                저장하기
+              </button>
+              <button className="btn-clear" onClick={clearAll}>
+                전체 삭제
+              </button>
+            </div>
           </div>
         )}
 

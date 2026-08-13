@@ -204,6 +204,7 @@
 
 .btn-toggle-key,
 .btn-clear,
+.btn-save,
 .btn-refresh,
 .btn-regenerate,
 .btn-remove,
@@ -270,7 +271,13 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: end;
+  align-items: start;
+}
+
+.textarea-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .prompt-textarea {
@@ -283,6 +290,23 @@
 
 .prompt-textarea::placeholder {
   color: var(--text-soft);
+}
+
+.char-counter {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.error-message {
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.84rem;
+  font-weight: 500;
 }
 
 .btn-generate {
@@ -380,6 +404,18 @@
   justify-content: space-between;
   align-items: end;
   margin: 24px 0 14px;
+  gap: 12px;
+}
+
+.results-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-save:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .btn-clear:hover {
@@ -686,6 +722,7 @@
 
   .prompt-form {
     grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
   .btn-generate {
