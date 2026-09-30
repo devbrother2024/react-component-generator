@@ -34,3 +34,6 @@ dist-ssr
 
 # playwright-cli 세션 산출물
 .playwright-cli/
+
+# 이력서 실습 결과 (가상 데이터, 실행마다 새로 생성)
+hiring-lab/results/
