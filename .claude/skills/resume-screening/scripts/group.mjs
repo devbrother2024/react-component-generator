@@ -16,7 +16,7 @@ function listFiles(path) {
   if (statSync(path).isFile()) return [path];
   const out = [];
   for (const entry of readdirSync(path)) {
-    if (entry.startsWith(".") || entry === "results") continue;
+    if (entry.startsWith(".") || entry === "results" || /^readme\.(md|txt)$/i.test(entry)) continue;
     const full = join(path, entry);
     if (statSync(full).isDirectory()) out.push(...listFiles(full));
     else if (SUPPORTED.has(extname(entry).toLowerCase())) out.push(full);

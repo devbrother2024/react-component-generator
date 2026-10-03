@@ -1,15 +1,23 @@
 // 지원자별 검토 결과를 모아 순위표를 만든다. 총점과 등급은 여기서만 계산한다.
 // 가중치와 등급 기준은 ../references/criteria.md 의 표를 읽는다.
-// 사용: bun aggregate.mjs <results 폴더>   (results/individual/*.md 를 읽고 results/screening-result.md 를 쓴다)
+// 사용: bun aggregate.mjs <results 폴더> [--summary <의견 TXT 파일>]
+// results/individual/*.md 를 읽고 screening-result.md 와 screening-result.html 을 함께 쓴다.
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderReport } from "./report.mjs";
 
 const resultsDir = process.argv[2] && resolve(process.argv[2]);
 if (!resultsDir) {
-  console.error("사용법: bun aggregate.mjs <results 폴더>");
+  console.error("사용법: bun aggregate.mjs <results 폴더> [--summary <의견 TXT 파일>]");
   process.exit(1);
 }
+// 요약은 명시적으로 전달한 경우에만 사용한다. 재계산에 오래된 의견을 섞지 않는다.
+const args = process.argv.slice(3);
+if (args.length && (args.length !== 2 || args[0] !== "--summary" || !args[1])) {
+  throw new Error("추가 인자는 --summary <의견 TXT 파일>만 지원합니다");
+}
+const summary = args.length ? readFileSync(resolve(args[1]), "utf8").normalize("NFC").trim() : "";
 const individualDir = join(resultsDir, "individual");
 const criteriaPath = fileURLToPath(new URL("../references/criteria.md", import.meta.url));
 const criteria = readFileSync(criteriaPath, "utf8").normalize("NFC");
@@ -98,7 +106,7 @@ rows.forEach((row, i) => {
   const must = row.mustOk ? "충족" : row.capped ? "미충족 (등급 상한 적용)" : "미충족";
   lines.push(`| ${i + 1} | ${row.d.name} | ${row.total} | ${row.grade} | ${row.verdict} | ${must} | ${anomalies} |`);
 });
-lines.push(``, `## 종합 의견`, ``, `<!-- 종합 의견 -->`, ``);
+lines.push(``, `## 종합 의견`, ``, summary || `<!-- 종합 의견 -->`, ``);
 for (const row of rows) {
   const d = row.d;
   lines.push(`## ${d.name} · ${row.total}점 · ${row.grade}`, ``, `| 역량 | 점수 | 근거 |`, `|---|---|---|`);
@@ -118,7 +126,10 @@ if (problems.length) {
 }
 
 const outFile = join(resultsDir, "screening-result.md");
+const htmlFile = join(resultsDir, "screening-result.html");
+const html = renderReport({ rows, weights, grades, cap: CAP, stamp, summary, problems });
 writeFileSync(outFile, lines.join("\n"));
+writeFileSync(htmlFile, html);
 
 const distribution = {};
 for (const row of rows) distribution[row.grade] = (distribution[row.grade] ?? 0) + 1;
@@ -126,6 +137,7 @@ console.log(
   JSON.stringify(
     {
       output_file: outFile,
+      html_file: htmlFile,
       total_applicants: rows.length,
       ranking: rows.map((row, i) => ({
         rank: i + 1,
